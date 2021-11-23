@@ -1,0 +1,21 @@
+{
+  "name": "cache-control",
+  "version": "1.0.0",
+  "description": "Node server demonstrating different cache-control headers.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kevinfarrugia/cache-control.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kevinfarrugia/cache-control/issues"
+  },
+  "homepage": "https://github.com/kevinfarrugia/cache-control#readme"
+}
