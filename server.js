@@ -3,6 +3,7 @@ import { createServer } from "http";
 
 const md5 = (input) => createHash("md5").update(input).digest("hex");
 
+// stylesheet for demo
 const getStyle = () => `
   * { 
     font-family: sans-serif;
@@ -42,31 +43,39 @@ const getStyle = () => `
   }
 `;
 
+// returns the time from the date object as HH:mm:ss
 const getTime = (date) =>
   `${date.getHours().toString().padStart(2, "0")}:${date
     .getMinutes()
     .toString()
-    .padStart(2, "0")}`;
+    .padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
 
-const getHtml = ({ title, text }) => `
+// returns the HTML for the demo
+const getHtml = ({ title, text, version }) => `
   <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>${getStyle()}</style>
+    <link rel="stylesheet" href="/style.v${version || 1}.css">
   </head>
   <body>
-    <h1>${title}</h1>
-    <pre>${text || ""}</pre>
+    <pre>${title || ""}</pre>
+    <p>${text || ""}</p>
     <p>
-      Generated at: <strong>${getTime(new Date())}</strong>
+      Generated on origin: <strong>${getTime(
+        new Date()
+      )}</strong> | Current time <strong id="time"></strong>
     </p>
     <nav>
-      <a href="/1">1</a>
-      <a href="/2">2</a>
-      <a href="/3">3</a>
-      <a href="/4">4</a>
-      <a href="/5">5</a>
+      <a href="/no-store">no-store</a>
+      <a href="/no-cache">private, no-cache</a>
+      <a href="/public-no-cache">public, no-cache</a>
+      <a href="/max-age-0">private, max-age=0</a>
+      <a href="/public-max-age-0-must-revalidate">public, max-age=0, must-revalidate</a>
+      <a href="/public-max-age-60">public, max-age=60</a>
+      <a href="/public-max-age-60-must-revalidate">public, max-age=60, must-revalidate</a>
+      <a href="/max-age-60-stale-while-revalidate-60">private, max-age=60, stale-while-revalidate=60</a>
+      <a href="/public-max-age-10-stale-while-revalidate-10-stale-if-error-60">public, max-age=10, stale-while-revalidate=10, stale-if-error=60</a>
     </nav>
     <br />
     <div class="wrapper">
@@ -77,6 +86,21 @@ const getHtml = ({ title, text }) => `
         )
         .join("")}
     </div>
+    <script>
+      const getTime = (date) =>
+        \`\$\{date.getHours().toString().padStart(2, "0")\}:\$\{date
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")\}:\$\{date.getSeconds().toString().padStart(2, "0")\}\`;
+
+      let date = new Date();
+      document.getElementById("time").innerHTML = getTime(date);
+
+      setInterval(() => {
+        date = new Date();
+        document.getElementById("time").innerHTML = getTime(date);
+      }, 1000);
+    </script>
   </body>
   </html>
 `;
@@ -100,9 +124,20 @@ const server = createServer((request, response) => {
     return;
   }
 
+  // static asset
+  if (/.+\.css$/.test(request.url)) {
+    response.writeHead(200, {
+      "cache-control": "max-age=3153600",
+    });
+    response.end(getStyle());
+    return;
+  }
+
   switch (request.url) {
-    case "/1": {
-      const html = getHtml({ title: "1", text: "no-store" });
+    case "/no-store": {
+      const html = getHtml({
+        title: "no-store",
+      });
 
       response.writeHead(200, {
         "cache-control": "no-store",
@@ -110,71 +145,146 @@ const server = createServer((request, response) => {
       response.end(html);
       break;
     }
-    case "/2": {
-      const html = getHtml({ title: "2", text: "no-cache" });
-      const etag = md5(html);
-
-      // if the ETAG matches the if-none-match header then respond with 304
-      if (etag === request.headers["if-none-match"]) {
-        response.writeHead(304);
-        response.end();
-      } else {
-        response.writeHead(200, {
-          "cache-control": "no-cache",
-          etag,
-        });
-        response.end(html);
-      }
-      break;
-    }
-    case "/3": {
-      const html = getHtml({ title: "3", text: "max-age=0, must-revalidate" });
-      const etag = md5(html);
-
-      // if the ETAG matches the if-none-match header then respond with 304
-      if (etag === request.headers["if-none-match"]) {
-        response.writeHead(304);
-        response.end();
-      } else {
-        response.writeHead(200, {
-          "cache-control": "max-age=0, must-revalidate",
-          etag,
-        });
-        response.end(html);
-      }
-      break;
-    }
-    case "/4": {
+    case "/no-cache": {
       const html = getHtml({
-        title: "4",
-        text: "max-age=600, must-revalidate",
+        title: "private, no-cache",
       });
       const etag = md5(html);
 
-      // if the ETAG matches the if-none-match header then respond with 304
       if (etag === request.headers["if-none-match"]) {
         response.writeHead(304);
         response.end();
       } else {
         response.writeHead(200, {
-          "cache-control": "max-age=600, must-revalidate",
+          "cache-control": "private, no-cache",
           etag,
         });
         response.end(html);
       }
       break;
     }
-    case "/5": {
-      const html = getHtml({ title: "5", text: "max-age=600" });
+    case "/public-no-cache": {
+      const html = getHtml({
+        title: "public, no-cache",
+      });
       const etag = md5(html);
 
-      // if the ETAG matches the if-none-match header then respond with 304
       if (etag === request.headers["if-none-match"]) {
         response.writeHead(304);
         response.end();
       } else {
         response.writeHead(200, {
-          "cache-control": "max-age=600",
+          "cache-control": "public, no-cache",
+          etag,
+        });
+        response.end(html);
+      }
+      break;
+    }
+    case "/max-age-0": {
+      const html = getHtml({
+        title: "private, max-age=0",
+      });
+      const etag = md5(html);
+
+      if (etag === request.headers["if-none-match"]) {
+        response.writeHead(304);
+        response.end();
+      } else {
+        response.writeHead(200, {
+          "cache-control": "private, max-age=0",
+          etag,
+        });
+        response.end(html);
+      }
+      break;
+    }
+    case "/public-max-age-0-must-revalidate": {
+      const html = getHtml({
+        title: "public, max-age=0, must-revalidate",
+      });
+      const etag = md5(html);
+
+      if (etag === request.headers["if-none-match"]) {
+        response.writeHead(304);
+        response.end();
+      } else {
+        response.writeHead(200, {
+          "cache-control": "public, max-age=0, must-revalidate",
+          etag,
+        });
+        response.end(html);
+      }
+      break;
+    }
+    case "/public-max-age-60": {
+      const html = getHtml({
+        title: "public, max-age=60",
+      });
+      const etag = md5(html);
+
+      if (etag === request.headers["if-none-match"]) {
+        response.writeHead(304);
+        response.end();
+      } else {
+        response.writeHead(200, {
+          "cache-control": "public, max-age=60",
+          etag,
+        });
+        response.end(html);
+      }
+      break;
+    }
+    case "/public-max-age-60-must-revalidate": {
+      const html = getHtml({
+        title: "public, max-age=60, must-revalidate",
+      });
+      const etag = md5(html);
+
+      if (etag === request.headers["if-none-match"]) {
+        response.writeHead(304);
+        response.end();
+      } else {
+        response.writeHead(200, {
+          "cache-control": "public, max-age=60, must-revalidate",
+          etag,
+        });
+        response.end(html);
+      }
+      break;
+    }
+    case "/max-age-60-stale-while-revalidate-60": {
+      const html = getHtml({
+        title: "private, max-age=60, stale-while-revalidate=60",
+      });
+      const etag = md5(html);
+
+      if (etag === request.headers["if-none-match"]) {
+        response.writeHead(304);
+        response.end();
+      } else {
+        response.writeHead(200, {
+          "cache-control": "private, max-age=60, stale-while-revalidate=60",
+          etag,
+        });
+        response.end(html);
+      }
+      break;
+    }
+    case "/public-max-age-10-stale-while-revalidate-10-stale-if-error-60": {
+      const html = getHtml({
+        title:
+          "public, max-age=10, stale-while-revalidate=10, stale-if-error=60",
+      });
+      const etag = md5(html);
+
+      if (etag === request.headers["if-none-match"]) {
+        response.writeHead(304);
+        response.end();
+      } else {
+        response.writeHead(200, {
+          "cache-control":
+            "public, max-age=10, stale-while-revalidate=10, stale-if-error=60",
           etag,
         });
         response.end(html);
@@ -182,7 +292,9 @@ const server = createServer((request, response) => {
       break;
     }
     default: {
-      const html = getHtml({ title: "HOME" });
+      const html = getHtml({
+        title: "HOME",
+      });
       response.writeHead(200);
       response.end(html);
       break;
