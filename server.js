@@ -85,6 +85,13 @@ const getHtml = ({ title, text, version }) => `
             "<p class='content'>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Doloribus dicta id, tempora rem accusamus ab ex, ratione ad exercitationem libero laudantium fugit reiciendis corrupti quis ipsam dolorum maxime perspiciatis nemo?</p>"
         )
         .join("")}
+    </div>    
+    <div>
+      <p>
+        <a href="https://github.com/kevinfarrugia/cache-control">GitHub</a> | 
+        <a href="https://imkev.dev/cache-control">Getting your HTTP Cache-Control headers right
+        </a>
+      </p>
     </div>
     <script>
       const getTime = (date) =>
