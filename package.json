@@ -4,6 +4,9 @@
   "description": "Node server demonstrating different cache-control headers.",
   "main": "server.js",
   "type": "module",
+  "engines": {
+    "node": "8.x"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
